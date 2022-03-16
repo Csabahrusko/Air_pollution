@@ -1,3 +1,96 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+
+    <title>Légszennyezettség szakdolgozat</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!--Script for firebase server
+    <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAGoWv-6MreNdW_YQ2FQGkLlXtESge9AIc",
+    authDomain: "air-pollution-329812.firebaseapp.com",
+    projectId: "air-pollution-329812",
+    storageBucket: "air-pollution-329812.appspot.com",
+    messagingSenderId: "954997376294",
+    appId: "1:954997376294:web:144e85a24dcc535ab22de7",
+    measurementId: "G-6G6CCBYSDL"
+  }; 
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+-->
+    <!--CSS-->  
+
+  <style>
+    body{
+      margin: 0 px;
+      padding: 0 px;
+      box-sizing: border-box;
+      font-family: poppin, 'Times New Roman', Times, serif;
+      font-size: large;
+      background-image: url(hatter.jpg);
+      color: white;
+      background-size: cover;
+      background-attachment: fixed;
+    }
+    h1{
+      font-weight: 700;
+      margin-top: 15px;
+    }
+    .input{
+      width: 350px;
+      padding: 5px;
+    }
+    table, th, td {
+      border: 3px solid white;
+      border-collapse: collapse;
+      text-align: center; 
+      vertical-align: middle;
+    }
+
+    table.center {
+      margin-left: auto; 
+      margin-right: auto;    
+    }
+
+    .btn{
+      background-color: #36486b;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    
+  </style>
+
+  </head>
+
 <?php
 $weather="";
 $error="";
@@ -13,6 +106,8 @@ $NO="";
 $PM10="";
 $PM25="";
 $city="";
+$result="";
+$sql="";
 
 //Connection with DB
 
@@ -21,19 +116,6 @@ define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_DATABASE', 'szakdolgozat');
 $connection = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
-
-//$sql = "select * from air_pollution_db";
-//Button Functions
-
-if(isset($_POST['Qyear'])){
-  $sql = "select * from air_pollution_db";
-  $records = mysqli_query($connection, $sql);      
-}
-
-if(isset($_POST['lastDay'])){
-  $sql = "select * FROM `air_pollution_db` ORDER BY `Dátum` DESC limit 1";
-  $records = mysqli_query($connection, $sql);      
-}
 
 //Weather API
 
@@ -92,333 +174,292 @@ if(isset($_POST['lastDay'])){
   }
 
   $city = $_POST['city'];
-  $sql = "INSERT INTO air_pollution_db_cities (Dat, SO2, NO2, CO, O3, NOO, PM10, PM25, City)
-  VALUES (now(), '$SO2', '$NO2', '$CO', '$O3', '$NO', '$PM10', '$PM25', '$city')";
 
-  if ($connection->query($sql) === TRUE) {
-    echo "New record created successfully";
-  } else {
+//Results from the datas
+
+/*			
+1. NO >90
+2. PM2,5 >110
+3. NO2 >130
+4. PM10 >180
+5. SO2 >200
+6. O3 >220
+7. CO >10000
+*/
+
+//error handling: there is one missing data from the API
+
+$result= $NO * 7 + $PM25 * 6 + $NO2 * 5 + $PM10 * 4 + $SO2 * 3 + $O3 * 2 + $CO;
+if ($NO==0) {
+  $result = $PM25 * 6 + $NO2 * 5 + $PM10 * 4 + $SO2 * 3 + $O3 * 2 + $CO;
+} else if ($PM25==0){
+  $result = $NO * 7 + $NO2 * 5 + $PM10 * 4 + $SO2 * 3 + $O3 * 2 + $CO;
+} else if ($NO2==0){
+  $result = $NO * 7 + $PM25 * 6 + $PM10 * 4 + $SO2 * 3 + $O3 * 2 + $CO;
+} else if ($PM10==0){
+  $result = $NO * 7 + $PM25 * 6 + $NO2 * 5 + $SO2 * 3 + $O3 * 2 + $CO;
+} else if ($SO2==0){
+  $result = $NO * 7 + $PM25 * 6 + $NO2 * 5 + $PM10 * 4 + $O3 *2 + $CO;
+} else if ($O3==0){
+  $result = $NO * 7 + $PM25 * 6 + $NO2 * 5 + $PM10 * 4 + $SO2 * 3 +  $CO;
+} else if ($CO==0){
+  $result = $NO * 7 + $PM25 * 6 + $NO2 * 5 + $PM10 * 4 + $SO2 * 3 + $O3 * 2;
+}
+ECHO $result;
+
+switch($result){
+  case 0:
+    break;
+  case $result <= 1000:
+    echo "<br>".$_POST['city']." levegőtartalma kitűnő";
+    break;
+  case $result <= 1200:
+    echo "<br>".$_POST['city']." levegőtartalma jó";
+    break;
+  case $result <= 1400:
+    echo "<br>".$_POST['city']." levegőtartalma megfelelő";
+    break;
+  case $result <= 1600:
+    echo "<br>".$_POST['city']." levegőtartalma szennyezett";
+    break;
+  case $result > 1600:
+    echo "<br>".$_POST['city']." levegőtartalma erősen szennyezett";
+    break;  
+  }
+
+  $sql = "INSERT INTO air_pollution_db_cities (Dat, SO2, NO2, CO, O3, NOO, PM10, PM25, Result, City)
+  VALUES (now(), '$SO2', '$NO2', '$CO', '$O3', '$NO', '$PM10', '$PM25', '$result', '$city')";
+  
+  if ($connection->query($sql) === FALSE) {
     echo "Error: " . $sql . "<br>" . $connection->error;
   }
   
-
+/*
     switch ($SO2) {
       case 0:
         $SO2 = "SO2 nincs adat";
-        echo $SO2;
+        //echo $SO2;
         break;
       case $SO2 <= 50:
         $SO2 = "SO2 kiváló";
-        echo $SO2;
+        //echo $SO2;
         break;  
       case $SO2 <= 100:
         $SO2 = "S02 jó";
-        echo $SO2;
+        //echo $SO2;
         break;
       case $SO2 <= 125:
         $SO2 = "S02 megfelelő";
-        echo $SO2;
+        //echo $SO2;
         break;
       case $SO2 <= 200:
         $SO2 = "S02 szennyezett";
-        echo $SO2;
+        //echo $SO2;
         break;          
       case $SO2 > 200:
         $SO2 = "S02 erősen szennyezett";
-        echo $SO2;
+        //echo $SO2;
         break;         
     }
     switch ($NO2) {
       case 0:
         $NO2 = "NO2 nincs adat";
-        echo $NO2;
+        //echo $NO2;
         break;
       case $NO2 <= 34:
         $NO2 = "NO2 kiváló";
-        echo $NO2;
+        //echo $NO2;
         break;  
       case $NO2 <= 68:
         $NO2 = "NO2 jó";
-        echo $NO2;
+        //echo $NO2;
         break;
       case $NO2 <= 85:
         $NO2 = "NO2 megfelelő";
-        echo $NO2;
+        //echo $NO2;
         break;
       case $NO2 <= 130:
         $NO2 = "NO2 szennyezett";
-        echo $NO2;
+        //echo $NO2;
         break;          
       case $NO2 > 130:
         $NO2 = "NO2 erősen szennyezett";
-        echo $NO2;
+        //echo $NO2;
         break;
     }      
     switch ($CO) {
       case 0:
         $CO = "CO nincs adat";
-        echo $CO;
+        //echo $CO;
         break;
       case $CO <= 2000:
         $CO = "CO kiváló";
-        echo $CO;
+        //echo $CO;
         break;  
       case $CO <= 4000:
         $CO = "CO jó";
-        echo $CO;
+        //echo $CO;
         break;
       case $CO <= 5000:
         $CO = "CO megfelelő";
-        echo $CO;
+        //echo $CO;
         break;
       case $CO <= 10000:
         $CO = "CO szennyezett";
-        echo $CO;
+        //echo $CO;
         break;          
       case $CO > 10000:
         $CO = "CO erősen szennyezett";
-        echo $CO;
+        //echo $CO;
         break;              
     }
     switch ($O3) {
       case 0:
         $O3 = "O3 nincs adat";
-        echo $O3;
+        //echo $O3;
         break;
       case $O3 <= 48:
         $O3 = "O3 kiváló";
-        echo $O3;
+        //echo $O3;
         break;  
       case $O3 <= 96:
         $O3 = "O3 jó";
-        echo $O3;
+        //echo $O3;
         break;
       case $O3 <= 120:
         $O3 = "O3 megfelelő";
-        echo $O3;
+        //echo $O3;
         break;
       case $O3 <= 220:
         $O3 = "O3 szennyezett";
-        echo $O3;
+        //echo $O3;
         break;          
       case $O3 > 220:
         $O3 = "O3 erősen szennyezett";
-        echo $O3;
+        //echo $O3;
         break;              
     }
     switch ($NO) {
       case 0:
         $NO = "NO nincs adat";
-        echo $NO;
+        //echo $NO;
         break;
       case $NO <= 20:
         $NO = "NO kiváló";
-        echo $NO;
+        //echo $NO;
         break;  
       case $NO <= 40:
         $NO = "NO jó";
-        echo $NO;
+        //echo $NO;
         break;
       case $NO <= 50:
         $NO = "NO megfelelő";
-        echo $NO;
+        //echo $NO;
         break;
       case $NO <= 90:
         $NO = "NO szennyezett";
-        echo $NO;
+        //echo $NO;
         break;          
       case $NO > 90:
         $NO = "NO erősen szennyezett";
-        echo $NO;
+        //echo $NO;
         break;              
     }
     switch ($PM10) {
       case 0:
         $PM10 = "PM10 nincs adat";
-        echo $PM10;
+        //echo $PM10;
         break;  
       case $PM10 <= 25:
         $PM10 = "PM10 kiváló";
-        echo $PM10;
+        //echo $PM10;
         break;  
       case $PM10 <= 50:
         $PM10 = "PM10 jó";
-        echo $PM10;
+        //echo $PM10;
         break;
       case $PM10 <= 90:
         $PM10 = "PM10 megfelelő";
-        echo $PM10;
+        //echo $PM10;
         break;
       case $PM10 <= 180:
         $PM10 = "PM10 szennyezett";
-        echo $PM10;
+        //echo $PM10;
         break;          
       case $PM10 > 180:
         $PM10 = "PM10 erősen szennyezett";
-        echo $PM10;
+        //echo $PM10;
         break;              
     }
     switch ($PM25) {
       case 0:
         $PM25 = "PM25 nincs adat";
-        echo $PM25;
+        //echo $PM25;
         break;  
       case $PM25 <= 15:
         $PM25 = "PM25 kiváló";
-        echo $PM25;
+        //echo $PM25;
         break;
       case $PM25 <= 30:
         $PM25 = "PM25 jó";
-        echo $PM25;
+        //echo $PM25;
         break;
       case $PM25 <= 55:
         $PM25 = "PM25 megfelelő";
-        echo $PM25;
+        //echo $PM25;
         break;
       case $PM25 <= 110:
         $PM25 = "PM25 szennyezett";
-        echo $PM25;
+        //echo $PM25;
         break;          
       case $PM25 > 110:
         $PM25 = "PM25 erősen szennyezett";
-        echo $PM25;
+        //echo $PM25;
         break;              
     }
-      if($NO == "NO erősen szennyezett")
-       echo "<br>".$_POST['city']." erősen szennyezett, ne tartózkodjon ott!";
-      if($CO == "CO kiváló" || $NO2 == "NO2 kiváló"){
-        echo "<br>".$_POST['city']." levegőszintje nem káros";
-      }
+*/
+
 /*
-      $sql = "select * from air_pollution_db_cities";
-      $records = mysqli_query($connection, $sql);
-      $chart_data = '';
-      while($row = mysqli_fetch_array($records)){
-        $chart_data .="{Dat:'".$row["Dat"]."',SO2:'".$row["SO2"]."', NO2:'".$row["NO2"]."', CO:'".$row["CO"]."', O3:'".$row["O3"]."',
-          NO:'".$row["NOO"]."', PM10:'".$row["PM10"]."', PM25:'".$row["PM25"]."', City:'".$row["City"]."},";
-        $chart_data = substr($chart_data, 0, -2);  
+      if($SO2 == "SO2 kiváló" && $NO2 == "NO2 kiváló" && $CO == "CO kiváló" && $O3 == "O3 kiváló" && 
+          $NO == "NO kiváló" && $PM10 == "PM10 kiváló" && $PM25 == "PM25 kiváló"){
+        echo "<br>".$_POST['city']." levegőszintje kiváló";
       }
-*/     
-
-
-  // NO 90
-  // PM2,5 110
-  // NO2 130
-  // PM10 180
-  // SO2 200
-  // O3 220
-  // CO 10000
-  
+      if($SO2 == "SO2 jó" && $NO2 == "NO2 jó" && $CO == "CO jó" && $O3 == "O3 jó" && 
+          $NO == "NO jó" && $PM10 == "PM10 jó" && $PM25 == "PM25 jó"){
+        echo "<br>".$_POST['city']." levegőszintje jó";
+      }
+      if($SO2 == "SO2 megfelelő" && $NO2 == "NO2 megfelelő" && $CO == "CO megfelelő" && $O3 == "O3 megfelelő" && 
+          $NO == "NO megfelelő" && $PM10 == "PM10 megfelelő" && $PM25 == "PM25 megfelelő"){
+        echo "<br>".$_POST['city']." levegőszintje megfelelő";
+      }
+      if($SO2 == "SO2 szennyezett" && $NO2 == "NO2 szennyezett" && $CO == "CO szennyezett" && $O3 == "O3 szennyezett" && 
+          $NO == "NO szennyezett" && $PM10 == "PM10 szennyezett" && $PM25 == "PM25 szennyezett"){
+        echo "<br>".$_POST['city']." levegőszintje szennyezett";
+      }
+      if($SO2 == "SO2 erősen szennyezett" && $NO2 == "NO2 erősen szennyezett" && $CO == "CO erősen szennyezett" && $O3 == "O3 erősen szennyezett" && 
+        $NO == "NO erősen szennyezett" && $PM10 == "PM10 erősen szennyezett" && $PM25 == "PM25 erősen szennyezett"){
+          echo "<br>".$_POST['city']." erősen szennyezett!";
+      }
+      if($SO2 == "SO2 nincs adat" && $NO2 == "NO2 nincs adat" && $CO == "CO nincs adat" && $O3 == "O3 nincs adat" && 
+          $NO == "NO nincs adat" && $PM10 == "PM10 nincs adat" && $PM25 == "PM25 nincs adat"){
+        echo "<br>".$_POST['city']." levegőszintje szennyezett";
+      }
+      if($NO == "NO erősen szennyezett" || $PM25 == "erősen szennyezett" || $NO2 == "CO erősen szennyezett" || $PM10 == "erősen szennyezett" || 
+          $SO2 == "NO erősen szennyezett"){
+        echo "<br>".$_POST['city']." erősen szennyezett";
+      }
+*/
     }
+
 ?>
-
-<!doctype html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Légszennyezettség szakdolgozat</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <!-- Charts -->
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
-
-    <!--Script for firebase server-->
-
-    <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyAGoWv-6MreNdW_YQ2FQGkLlXtESge9AIc",
-    authDomain: "air-pollution-329812.firebaseapp.com",
-    projectId: "air-pollution-329812",
-    storageBucket: "air-pollution-329812.appspot.com",
-    messagingSenderId: "954997376294",
-    appId: "1:954997376294:web:144e85a24dcc535ab22de7",
-    measurementId: "G-6G6CCBYSDL"
-  }; 
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
-
-    <script>/*
-          Morris.Bar({
-            element: 'chart',
-            data:[<?php echo $chart_data; ?>],
-            xkey:'dat',
-            ykey:['SO2', 'NO2', 'CO', 'O3', 'NO', 'PM10', 'PM25', 'city'],
-            labels:['SO2', 'NO2', 'CO', 'O3', 'NO', 'PM10', 'PM25', 'city'],
-            hideHover:'auto',
-          })*/
-    </script>
-
-  <!--CSS-->  
-
-  <style>
-    body{
-      margin: 0 px;
-      padding: 0 px;
-      box-sizing: border-box;
-      font-family: poppin, 'Times New Roman', Times, serif;
-      font-size: large;
-      background-image: url(hatter.jpg);
-      color: white;
-      background-size: cover;
-      background-attachment: fixed;
-    }
-    h1{
-      font-weight: 700;
-      margin-top: 15px;
-    }
-    .input{
-      width: 350px;
-      padding: 5px;
-    }
-    table, th, td {
-      border: 3px solid white;
-      border-collapse: collapse;
-      text-align: center; 
-      vertical-align: middle;
-    }
-
-    table.center {
-      margin-left: auto; 
-      margin-right: auto;    
-    }
-
-    .btn{
-      background-color: #36486b;
-      border: none;
-      color: white;
-      padding: 15px 32px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 16px;
-      margin: 4px 2px;
-      cursor: pointer;
-    }
-    
-  </style>
-
-  </head>
   <body>
   
     <h1>Légszennyezettségi adatok</h1>
+            <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
+            <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+            <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+            <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+
     <table class="center" width="1000" border="5" cellpadding="5" cellspacing="5">
       <colgroup>
         <col span="10" style="background-color: #36486b">
@@ -492,8 +533,6 @@ if(isset($_POST['lastDay'])){
         <p><label for="city"></label></p>
         <p><input type="text" name="city" id="city" placeholder="Város"></p>
         <button type="submit" name="Idojaras" class="btn" value="Időjárás">Időjárás</button>
-        <button type="submit" name="Qyear" class="btn" value="90 napos adatok">Negyed éves adatok</button>
-        <button type="submit" name="lastDay" class="btn" value="Utolsó nap">Utolsó nap</button>
 
         <div class="output mt-3">
 
@@ -518,7 +557,7 @@ if(isset($_POST['lastDay'])){
         </div>
 
     </form>
-    <!-- Creating table, showing the results-->
+    <!-- Creating table, showing the results -->
     <table class="center" width="1000" border="5" cellpadding="5" cellspacing="5">
       <colgroup>
         <col span="10" style="background-color: #36486b">
@@ -534,12 +573,13 @@ if(isset($_POST['lastDay'])){
         <th>PM10</th>
         <th>CPM2.5</th>
       </tr>
+
           <?php
           
             $sql = "select * from air_pollution_db_cities where city = '$city'"; 
-            $results = mysqli_query($connection,$sql);
-            while($data = mysqli_fetch_assoc($results)){
-              
+            $FromDB = mysqli_query($connection,$sql);
+            while($data = mysqli_fetch_assoc($FromDB)){
+
               echo "<tr>";
               echo "<th>".$data['City']."</th>";
               echo "<th>".$data['Dat']."</th>";
@@ -553,9 +593,35 @@ if(isset($_POST['lastDay'])){
               echo "</tr>";
             
           }
-          mysqli_close($connection);
-          
+
+           // Charts
+
+          $sql = "SELECT * FROM air_pollution_db_cities where city = '$city'";
+          $FromDB = mysqli_query($connection, $sql);
+          $chart_data = '';
+          while($row = mysqli_fetch_array($FromDB))
+          {
+            $chart_data .= "{ Dat:'".$row["Dat"]."', Result:'".$row["Result"]."'}, ";
+          }
+            $chart_data = substr($chart_data, 0, -2);
           ?>
-        
+
+          <div style="width: 500px;height: 500px">
+            <canvas id="LINE"></canvas>
+          </div>
+
+          <script>
+            Morris.Bar({
+              element : 'LINE',
+              data:[<?php echo $chart_data; ?>],
+              xkey:'Dat',
+              ykey:['result'],
+              labels:['result'],
+              hideHover:'auto',
+              stacked:true
+            });
+            jQuery.ready()
+          </script>
+
   </body>
 </html>
